@@ -38,27 +38,27 @@ const uint8_t servo_R_33 = 2;
 
 // LEG PULSE WIDTH OFFSETS //
 
-const int8_t L_11_offset = 0;
-const int8_t L_12_offset = 0;
+const int8_t L_11_offset = 50;
+const int8_t L_12_offset = -10;
 const int8_t L_13_offset = 20;
 
-const int8_t L_21_offset = 0;
-const int8_t L_22_offset = 0;
-const int8_t L_23_offset = 20;
+const int8_t L_21_offset = 50;
+const int8_t L_22_offset = -12;
+const int8_t L_23_offset = 30;
 
-const int8_t L_31_offset = 0;
+const int8_t L_31_offset = 30;
 const int8_t L_32_offset = 30;
 const int8_t L_33_offset = 40;
 
-const int8_t R_11_offset = -10;
+const int8_t R_11_offset = 40;
 const int8_t R_12_offset = 30;
 const int8_t R_13_offset = 50;
 
-const int8_t R_21_offset = 0;
+const int8_t R_21_offset = 34;
 const int8_t R_22_offset = 30;
 const int8_t R_23_offset = 30;
 
-const int8_t R_31_offset = 10;
+const int8_t R_31_offset = 40;
 const int8_t R_32_offset = 10;
 const int8_t R_33_offset = 10;
 
@@ -133,4 +133,3 @@ uint16_t new_signal[num_of_ch]; // Values memcpy'd from signal_buffer; For direc
 uint16_t old_signal[num_of_ch];
 uint32_t rising_edge_time[num_of_ch];
 volatile uint16_t signal_buffer[num_of_ch]; // For ISR use only; NOT for direct use
-
