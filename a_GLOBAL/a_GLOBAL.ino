@@ -11,8 +11,8 @@
 const boolean LEFT_LEG = true;
 const boolean RIGHT_LEG = false;
 
-const uint8_t OLD_SIGNAL_ARRAY = 1;
-const uint8_t NEW_SIGNAL_ARRAY = 2;
+const uint8_t ACTIVE_SIGNAL_ARRAY = 1;
+const uint8_t DEBUG_SIGNAL_ARRAY = 2;
 
 // LEG ID ASSIGNMENT //
 
@@ -38,49 +38,37 @@ const uint8_t servo_R_33 = 2;
 
 // LEG PULSE WIDTH OFFSETS //
 
-const int8_t L_11_offset = 50;
-const int8_t L_12_offset = -10;
-const int8_t L_13_offset = 20;
+const int8_t L_11_offset = 0;
+const int8_t L_12_offset = 0;
+const int8_t L_13_offset = 0;
 
-const int8_t L_21_offset = 50;
-const int8_t L_22_offset = -12;
-const int8_t L_23_offset = 30;
+const int8_t L_21_offset = 0;
+const int8_t L_22_offset = 0;
+const int8_t L_23_offset = 0;
 
-const int8_t L_31_offset = 30;
-const int8_t L_32_offset = 30;
-const int8_t L_33_offset = 40;
+const int8_t L_31_offset = 0;
+const int8_t L_32_offset = 0;
+const int8_t L_33_offset = 0;
 
-const int8_t R_11_offset = 40;
-const int8_t R_12_offset = 30;
-const int8_t R_13_offset = 50;
+const int8_t R_11_offset = 0;
+const int8_t R_12_offset = 0;
+const int8_t R_13_offset = 0;
 
-const int8_t R_21_offset = 34;
-const int8_t R_22_offset = 30;
-const int8_t R_23_offset = 30;
+const int8_t R_21_offset = 0;
+const int8_t R_22_offset = 0;
+const int8_t R_23_offset = 0;
 
-const int8_t R_31_offset = 40;
-const int8_t R_32_offset = 10;
-const int8_t R_33_offset = 10;
-
-// LEG ANGLE OFFSETS (RADIANS) //
-
-const float L_1_coxa_rad_offset = radians(-45);
-const float L_2_coxa_rad_offset = radians(0);
-const float L_3_coxa_rad_offset = radians(45);
-
-const float R_1_coxa_rad_offset = radians(45);
-const float R_2_coxa_rad_offset = radians(0);
-const float R_3_coxa_rad_offset = radians(-45);
+const int8_t R_31_offset = 0;
+const int8_t R_32_offset = 0;
+const int8_t R_33_offset = 0;
 
 // PHYSICAL DIMENSIONS //
-
-const float coxa_length = 41.92; // Measured in mm
-const float femur_length = 45.00;
-const float tibia_length = 112.68;
 
 const float body_width = 200; // coxa pivot to coxa pivot
 
 // COMMAND LIMITS //
+
+// Units in mm... I think?
 
 const long z_height_min = 65;
 const long z_height_max = 150;
@@ -100,6 +88,8 @@ const long gait_delta_z_min = 0;
 
 // FOR RC CONTROL //
 
+#define DEBUG_MOVE_TIBIA_TO_ANGLE
+
 const uint8_t num_of_ch = 10;
 
 const uint8_t ch_1 = 0; // Just for convenience and to reduce confusion
@@ -113,10 +103,9 @@ const uint8_t ch_8 = 7;
 const uint8_t ch_9 = 8;
 const uint8_t ch_10 = 9;
 
-const long signal_min = 980;
-const long signal_max = 2000;
+const long signal_min = 928;
+const long signal_max = 1920;
 const long signal_mid = (signal_max + signal_min)/2;
-const long signal_error = 100;
 
 const uint8_t ch_1_pin = 52; // Lowest: 992, Neutral: 1488, Highest: 1984
 const uint8_t ch_2_pin = 53; // Lowest: 984, Neutral: 1492, Highest: 1976
@@ -129,7 +118,7 @@ const uint8_t ch_8_pin = 51;
 const uint8_t ch_9_pin = A14;
 const uint8_t ch_10_pin = A11;
 
-uint16_t new_signal[num_of_ch]; // Values memcpy'd from signal_buffer; For direct use
-uint16_t old_signal[num_of_ch];
+uint16_t new_signal[num_of_ch]; // Values memcpy'd from volatile_signals[] for manipulation.
+uint16_t debug_signal[num_of_ch];
 uint32_t rising_edge_time[num_of_ch];
-volatile uint16_t signal_buffer[num_of_ch]; // For ISR use only; NOT for direct use
+volatile uint16_t volatile_signals[num_of_ch]; // For ISR access only.

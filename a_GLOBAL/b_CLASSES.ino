@@ -11,48 +11,31 @@ class Leg {
     uint16_t coxa_offset = 0;
     uint16_t femur_offset = 0;
     uint16_t tibia_offset = 0;
-    float coxa_len = 0;
-    float femur_len = 0;
-    float tibia_len = 0;
+    float coxa_rad_min = 0;
+    float coxa_rad_max = 0;
+    float femur_rad_min = 0;
+    float femur_rad_max = 0;
+    float tibia_rad_min = 0;
+    float tibia_rad_max = 0;
+    float coxa_signal_min = 0;
+    float coxa_signal_max = 0;
+    float femur_signal_min = 0;
+    float femur_signal_max = 0;
+    float tibia_signal_min = 0;
+    float tibia_signal_max = 0;
+    float B_x_L = 0;
+    float B_y_L = 0;
     boolean is_left_leg = true;
 
-    // LEG ANGLE LIMITS //
-
-    float coxa_rad_max = radians(45); // Angles corresponding to servo pulse values in LEG SERVO PULSE LIMITS
-    float coxa_rad_min = radians(-45);
-    const float femur_rad_max = radians(161.17);
-    const float femur_rad_min = radians(23.31);
-    const float tibia_rad_max = radians(139.61);
-    const float tibia_rad_min = radians(44.41);
-
-    // LEG ANGLE OFFSETS //
-
-    float coxa_rad_offset = radians(0); // To account for offset angle of front and back legs (with respect to middle legs)
-
-    // LEG SERVO PULSE LIMITS //
-    
-    static const int16_t coxa_cw_limit = 200; // CW and CCW directions taking axis pointing up
-    static const int16_t coxa_ccw_limit = 360;
-    static const int16_t femur_up_limit = 380;
-    static const int16_t femur_down_limit = 120;
-    static const int16_t tibia_up_limit = 120;
-    static const int16_t tibia_down_limit = 300;
+  private:
+    float coxa_length = 41.92; // Measured in mm
+    float femur_length = 45.00;
+    float tibia_length = 112.68;
     
   public:
-
-    // VARIABLES USED OUTSIDE OF CLASS //
-  
-    static const int16_t coxa_middle = (coxa_cw_limit + coxa_ccw_limit)/2;
-    static const int16_t femur_middle = (femur_up_limit + femur_down_limit)/2;
-    static const int16_t tibia_middle = (tibia_up_limit + tibia_down_limit)/2;
-
-    const float coxa_middle_rad = float_map(float(coxa_middle), coxa_cw_limit, coxa_ccw_limit, coxa_rad_min, coxa_rad_max);
-    const float femur_middle_rad = float_map(float(femur_middle), femur_down_limit, femur_up_limit, femur_rad_min, femur_rad_max);
-    const float tibia_middle_rad = float_map(float(tibia_middle), tibia_down_limit, tibia_up_limit, tibia_rad_min, tibia_rad_max);
-
     // STRUCTS //
 
-    struct all_angles_rad {
+    struct leg_angles_rad {
       float coxa_rad;
       float femur_rad;
       float tibia_rad;
@@ -67,10 +50,8 @@ class Leg {
       uint16_t coxa_offset_def = 0;
       uint16_t femur_offset_def = 0;
       uint16_t tibia_offset_def = 0;
-      float coxa_len_def = 0;
-      float femur_len_def = 0;
-      float tibia_len_def = 0;
-      float coxa_rad_offset_def = 0;
+      float B_x_L_def = 0;
+      float B_y_L_def = 0;
       boolean is_left_leg = true;
     }
     
@@ -82,10 +63,8 @@ class Leg {
       uint16_t coxa_offset_def = 0,
       uint16_t femur_offset_def = 0,
       uint16_t tibia_offset_def = 0,
-      float coxa_len_def = 0,
-      float femur_len_def = 0,
-      float tibia_len_def = 0,
-      float coxa_rad_offset_def = 0,
+      float B_x_L_def = 0,
+      float B_y_L_def = 0,
       boolean is_left_leg_def = true)
     {
       driver = drive_def;
@@ -95,144 +74,213 @@ class Leg {
       coxa_offset = coxa_offset_def;
       femur_offset = femur_offset_def;
       tibia_offset = tibia_offset_def;
-      coxa_len = coxa_len_def;
-      femur_len = femur_len_def;
-      tibia_len = tibia_len_def;
-      coxa_rad_offset = coxa_rad_offset_def;
+      B_x_L = B_x_L_def;
+      B_y_L = B_y_L_def;
       is_left_leg = is_left_leg_def;
     }
 
     // SETTER FUNCTIONS //
     
-    void set_driver(Adafruit_PWMServoDriver driver_object) {
+    void setDriver(Adafruit_PWMServoDriver driver_object) {
       driver = driver_object;
     }
-    void set_pins(uint8_t coxa_pin_num, uint8_t femur_pin_num, uint8_t tibia_pin_num) {
+    void setPins(uint8_t coxa_pin_num, uint8_t femur_pin_num, uint8_t tibia_pin_num) {
       coxa_pin = coxa_pin_num;
       femur_pin = femur_pin_num;
       tibia_pin = tibia_pin_num;
     }
-    void set_offsets(uint16_t coxa, uint16_t femur, uint16_t tibia) {
+    void setOffsets(uint16_t coxa, uint16_t femur, uint16_t tibia) {
       coxa_offset = coxa;
       femur_offset = femur;
       tibia_offset = tibia;
     }
-    void set_lengths(float coxa, float femur, float tibia) {
-      coxa_len = coxa;
-      femur_len = femur;
-      tibia_len = tibia;
+    void setLengths(float coxa, float femur, float tibia) {
+      coxa_length = coxa;
+      femur_length = femur;
+      tibia_length = tibia;
     }
-    void set_coxa_rad_offset(float coxa_rad_offset_val) {
-      coxa_rad_offset = coxa_rad_offset_val;
+    void set_B_p_L(float B_x_L_arg, float B_y_L_arg) {
+      B_x_L = B_x_L_arg;
+      B_y_L = B_y_L_arg;
     }
+    void setCoxaRadMin(float coxa_rad_min_arg) {
+      coxa_rad_min = coxa_rad_min_arg;
+    }
+    void setCoxaRadMax(float coxa_rad_max_arg) {
+      coxa_rad_max = coxa_rad_max_arg;
+    }
+    void setFemurRadMin(float femur_rad_min_arg) {
+      femur_rad_min = femur_rad_min_arg;
+    }
+    void setFemurRadMax(float femur_rad_max_arg) {
+      femur_rad_max = femur_rad_max_arg;
+    }
+    void setTibiaRadMin(float tibia_rad_min_arg) {
+      tibia_rad_min = tibia_rad_min_arg;
+    }
+    void setTibiaRadMax(float tibia_rad_max_arg) {
+      tibia_rad_max = tibia_rad_max_arg;
+    }
+    void setCoxaSignalMin(uint16_t coxa_signal_min_arg) {
+      coxa_signal_min = coxa_signal_min_arg;
+    }
+    void setCoxaSignalMax(uint16_t coxa_signal_max_arg) {
+      coxa_signal_max = coxa_signal_max_arg;
+    }
+    void setFemurSignalMin(uint16_t femur_signal_min_arg) {
+      femur_signal_min = femur_signal_min_arg;
+    }
+    void setFemurSignalMax(uint16_t femur_signal_max_arg) {
+      femur_signal_max = femur_signal_max_arg;
+    }
+    void setTibiaSignalMin(uint16_t tibia_signal_min_arg) {
+      tibia_signal_min = tibia_signal_min_arg;
+    }
+    void setTibiaSignalMax(uint16_t tibia_signal_max_arg) {
+      tibia_signal_max = tibia_signal_max_arg;
+    }
+    
+    // GETTER FUNCTIONS //
 
+      float getCoxaLength() {
+        return coxa_length;
+      }
+      float getFemurLength() {
+        return femur_length;
+      }
+      float getTibiaLength() {
+        return tibia_length;
+      }
+      float getCoxaRadMin() {
+        return coxa_rad_min;
+      }
+      float getCoxaRadMax() {
+        return coxa_rad_max;
+      }
+      float getFemurRadMin() {
+        return femur_rad_min;
+      }
+      float getFemurRadMax() {
+        return femur_rad_max;
+      }
+      float getTibiaRadMin() {
+        return tibia_rad_min;
+      }
+      float getTibiaRadMax() {
+        return tibia_rad_max;
+      }
+
+      float getCoxaSignalMin() {
+        return coxa_signal_min;
+      }
+      float getCoxaSignalMax() {
+        return coxa_signal_max;
+      }
+      float getFemurSignalMin() {
+        return femur_signal_min;
+      }
+      float getFemurSignalMax() {
+        return femur_signal_max;
+      }
+      float getTibiaSignalMin() {
+        return tibia_signal_min;
+      }
+      float getTibiaSignalMax() {
+        return tibia_signal_max;
+      }
+   
     // ACTION FUNCTIONS //
     
-    void move_coxa(float coxa_rad_cmd) {
-      driver.setPWM(coxa_pin, 0, constrain(float_map(coxa_rad_cmd, coxa_rad_min, coxa_rad_max, coxa_cw_limit, coxa_ccw_limit), coxa_cw_limit, coxa_ccw_limit) + coxa_offset);
+    void moveCoxaToAngle(float coxa_rad_cmd) {
+      uint16_t pulse_width_cmd = float_map(coxa_rad_cmd, coxa_rad_min, coxa_rad_max, coxa_signal_min, coxa_signal_max);
+      driver.setPWM(coxa_pin, 0, pulse_width_cmd);
     }
-    void move_femur(float femur_rad_cmd) {
-      driver.setPWM(femur_pin, 0, constrain(float_map(femur_rad_cmd, femur_rad_min, femur_rad_max, femur_down_limit, femur_up_limit), femur_down_limit, femur_up_limit) + femur_offset);
+    void moveFemurToAngle(float femur_rad_cmd) {
+      uint16_t pulse_width_cmd = float_map(femur_rad_cmd, femur_rad_min, femur_rad_max, femur_signal_min, femur_signal_max);
+      driver.setPWM(femur_pin, 0, pulse_width_cmd);
     }
-    void move_tibia(float tibia_rad_cmd) {
-      driver.setPWM(tibia_pin, 0, constrain(float_map(tibia_rad_cmd, tibia_rad_min, tibia_rad_max, tibia_down_limit, tibia_up_limit), tibia_up_limit, tibia_down_limit) + tibia_offset);
+    void moveTibiaToAngle(float tibia_rad_cmd) {
+      uint16_t pulse_width_cmd = float_map(tibia_rad_cmd, tibia_rad_min, tibia_rad_max, tibia_signal_min, tibia_signal_max);
+      driver.setPWM(tibia_pin, 0, pulse_width_cmd);
     }
-    void move_leg(float end_z, float end_y, float end_x, float leg_flare = 50) {
-      all_angles_rad vals = calc_leg(end_z, end_y, end_x, leg_flare);
-      move_coxa(vals.coxa_rad);
-      move_femur(vals.femur_rad);
-      move_tibia(vals.tibia_rad);
+    void moveCoxaToSignal(float coxa_signal_cmd) {
+      driver.setPWM(coxa_pin, 0, coxa_signal_cmd);
     }
-
-    // HOMING FUNCTIONS //
-
-    void home_coxa() {
-      move_coxa(coxa_middle_rad);
+    void moveFemurToSignal(float femur_signal_cmd) {
+      driver.setPWM(femur_pin, 0, femur_signal_cmd);
     }
-    void home_femur() {
-      move_femur(femur_middle_rad);
+    void moveTibiaToSignal(float tibia_signal_cmd) {
+      driver.setPWM(tibia_pin, 0, tibia_signal_cmd);
     }
-    void home_tibia() {
-      move_tibia(tibia_middle_rad);
+    void moveToBodyXYZ(float B_x, float B_y, float B_z) {
+      leg_angles_rad vals = bodyIK(B_x, B_y, B_z);
+      moveCoxaToAngle(vals.coxa_rad);
+      moveFemurToAngle(vals.femur_rad);
+      moveTibiaToAngle(vals.tibia_rad);
     }
 
     // INVERSE KINEMATIC FUNCTIONS //
 
-    all_angles_rad calc_stage_1(float z_height, float eff_leg_y) {      
-      /*  Calculates femur and tibia joint angles from the desired z_height of the hexapod
-       *  and the y-extension of the effective leg formed by the femur and tibia from the femur joint.
-       *  +z down from femur joint axis, +y away from femur joint axis in coxa direction.  */  
-            
-      all_angles_rad calc_values;
-      float alpha_angle = 0;
-      float tibia_angle = 0;
-      float eff_leg_rad = 0;
-      float eff_leg = 0;
-      float numerator = 0;
-      float denominator = 0;
+    leg_angles_rad bodyIK(float B_x_dest = 0, float B_y_dest = 0, float B_z_dest = 0) {
+      /*
+       *  ARGUMENTS:
+       *  + B_x_dest: The x-coordinate, defined in frame B, of the destination foot position
+       *  + B_y_dest: The y-coordinate, defined in frame B, of the destination foot position
+       *  + B_z_dest: The z-coordinate, defined in frame B, of the destination foot position
+       *  
+       *  RETURNS:
+       *  + leg_angles_rad: A struct containing the calculated coxa, femur and tibia angles.
+       */
 
-      eff_leg = float(sqrt(pow(eff_leg_y, 2) + pow(z_height, 2))); // effective leg length from femur joint to tibia joint
-      tibia_angle = acos((pow((eff_leg), 2) - pow(femur_len, 2) - pow(tibia_len, 2))/(-2*femur_len*tibia_len)); // angle between femur and tibia
-      eff_leg_rad = atan2(eff_leg_y, z_height);
+      float B_x_dest_from_L = B_x_dest - B_x_L;
+      float B_y_dest_from_L = B_y_dest - B_y_L;
       
-      numerator = tibia_len*sin(tibia_angle);
-      denominator = eff_leg;
+      float B_p_dest_from_L[2];
+      B_p_dest_from_L[0] = B_x_dest_from_L;
+      B_p_dest_from_L[1] = B_y_dest_from_L;
 
-      if ( eff_leg < 103 ) { // The point below which the femur angle is 90 degrees and some math sht happens
-        alpha_angle = ((PI/2) - asin(numerator/denominator)) + PI/2;
-      } else {
-        alpha_angle = asin(numerator/denominator);
-      }
-
-      calc_values.coxa_rad = 0;
-      calc_values.tibia_rad = tibia_angle;
-      calc_values.femur_rad = alpha_angle + eff_leg_rad;
+      float theta = atan2(B_p_dest_from_L[0], B_p_dest_from_L[1]);
       
-      return calc_values;
+      float L_p_dest[3];
+      L_p_dest[0] = B_p_dest_from_L[0]*(cos(theta) + sin(theta));
+      L_p_dest[1] = B_p_dest_from_L[1]*(-sin(theta) + cos(theta));
+      L_p_dest[2] = B_z_dest;
+
+      leg_angles_rad solved_leg_angles;
+      solved_leg_angles = localIK(L_p_dest[0], L_p_dest[2]);
+      solved_leg_angles.coxa_rad = theta;
+
+      return solved_leg_angles;
     }
 
-    all_angles_rad calc_leg(float end_z, float end_y, float end_x, float leg_flare = 50) {
-      /*  Takes in the x, y, z coordinates taking the coxa joint as origin and calculates
-       *  the coxa angle (coxa_rad), and using that to calculate eff_leg_y, which in turn is
-       *  fed into the calc_stage_1() function to calculate the femur and tibia angles.
-       *  Outputs coxa_rad, femur_rad, tibia_rad in a struct
-       *  +y away from coxa joint in coxa direction, +x in the y-cross-z direction from coxa in home position.  */
+    leg_angles_rad localIK(float foot_local_x = 0, float foot_local_z = 0) {      
+      /*  
+       *  Calculates phi and rho (femur and tibia angles) from the x and z coordinates B_p_dest_from_L,
+       *  where L is the frame attached to the coxa joint, with Z pointing up and X pointing
+       *  along the coxa, and B_p_dest_from_L is the displacement of the commanded foot location from the
+       *  origin of frame L, defined in frame B, the body frame.
+       *  
+       *  Returns a leg_angles_rad struct containing the calculated femur and tibia angles. Coxa
+       *  angle is not calculated here, and is set to 0.
+       */
 
-      all_angles_rad  output_angles_rad;
+      float eff_leg = float(sqrt(pow(foot_local_x, 2) + pow(foot_local_z, 2))); // effective leg length from femur joint to tibia joint
+      float beta = acos((pow((eff_leg), 2) - pow(femur_length, 2) - pow(tibia_length, 2))/(-2*femur_length*tibia_length)); // angle between femur and tibia
+      float phi = atan2(foot_local_x - coxa_length, foot_local_z);
+      float rho = -(PI - beta);
       
-      float coxa_angle = 0;
-      float eff_leg_y = 0;
-      float angled_leg_x_offset = 0;
-      float offset_end_x;
-      float true_end_y = 0;
-
-      angled_leg_x_offset = leg_flare*sin(coxa_rad_offset);
-
-      if (is_left_leg) {
-        true_end_y = leg_flare*cos(coxa_rad_offset) + end_y;
-      } else {
-        true_end_y = leg_flare*cos(coxa_rad_offset) - end_y;
-      }
-
-      if (is_left_leg) {
-        offset_end_x = angled_leg_x_offset + end_x;
-      } else {
-        offset_end_x = angled_leg_x_offset - end_x;
-      }
-    
-      coxa_angle = atan2(offset_end_x, true_end_y);
-      eff_leg_y = (true_end_y/(cos(coxa_angle))) - coxa_len;
-    
-      output_angles_rad = calc_stage_1(end_z, eff_leg_y); // Now output_angles_rad has the femur and tibia angles, but coxa angle is still 0
-      output_angles_rad.coxa_rad = coxa_rad_offset - coxa_angle; // Now output_angles_rad is complete with all angles in radians
-
-      return output_angles_rad;      
+      leg_angles_rad calc_values;
+      
+      calc_values.coxa_rad = 0;
+      calc_values.tibia_rad = rho;
+      calc_values.femur_rad = phi;
+      
+      return calc_values;
     }
     
     // MISC FUNCTIONS //
     
     float float_map(float x, float in_min, float in_max, float out_min, float out_max) {
-      return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+      return (((x - in_min) * ((out_max - out_min) / (in_max - in_min))) + out_min);
     }
-
 };

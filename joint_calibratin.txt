@@ -1,0 +1,20 @@
+
+L1 coxa: 
+L1 femur: 120 | 296
+L1 tibia: 304 | 124
+
+L2 femur: 120 | 300
+L2 tibia: 320 | 152
+
+L3 femur: 156 | 340
+L3 tibia: 332 | 148
+
+R1 coxa: 
+R1 femur: 150 | 332
+R1 tibia: 344 | 148
+
+R2 femur: 144 | 336
+R2 tibia: 328 | 120
+
+R3 femur: 140 | 320
+R3 tibia: 300 | 116

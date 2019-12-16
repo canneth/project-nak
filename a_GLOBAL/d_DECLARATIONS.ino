@@ -1,4 +1,8 @@
 
+// UTILITY FUNCTIONS //
+
+float floatMap(float x, float in_min, float in_max, float out_min, float out_max);
+
 // HEXAPOD MOVEMENT //
 
 void init_drivers();
@@ -26,13 +30,5 @@ void copy_vals_to(uint8_t signal_array_id);
 
 // FOR RC CONTROL - HEXAPOD SPECIFIC //
 
-float get_cmd_val(uint8_t signal_array_id, uint8_t ch_num);
-
-void adjust_protocol();
-
-void enter_change_leg_flare_routine();
-void change_leg_flare_routine(float old_z_height);
-void exit_change_leg_flare_routine(float old_z_height);
-void change_leg_flare_protocol();
-
-void walk_protocol();
+float copyVolatileSignalsToArray(uint8_t signal_array_id, uint8_t ch_num);
+float getSignalFromArray(uint8_t signal_array_id, uint8_t ch_num);
