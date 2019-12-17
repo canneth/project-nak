@@ -77,16 +77,16 @@ float getSignalFromArray(uint8_t signal_array_id, uint8_t ch_num) {
   switch (signal_array_id) {
     case ACTIVE_SIGNAL_ARRAY:
       switch (ch_num) {
-        case ch_1: return float(map(new_signal[ch_num], signal_min, signal_max, y_lean_min, y_lean_max));
-        case ch_2: return float(map(new_signal[ch_num], signal_min, signal_max, x_lean_min, x_lean_max));
-        case ch_3: return float(map(new_signal[ch_num], signal_min, signal_max, x_tilt_min, x_tilt_max));
-        case ch_4: return float(map(new_signal[ch_num], signal_min, signal_max, y_tilt_min, y_tilt_max));
-        case ch_5: return float(map(new_signal[ch_num], signal_min, signal_max, z_height_min, z_height_max));
-        case ch_6: return float(new_signal[ch_num]); // UNUSED SWITCH! (correct as at 1/10/2018)
-        case ch_7: break;
-        case ch_8: return float(map(new_signal[ch_num], signal_min, signal_max, leg_flare_min, leg_flare_max));
-        case ch_9: return float(new_signal[ch_num]);
-        case ch_10: return float(map(new_signal[ch_num], signal_min, signal_max, gait_delta_z_min, gait_delta_z_max));
+        case ch_1: return float(debug_signal[ch_num]);
+        case ch_2: return float(debug_signal[ch_num]);
+        case ch_3: return float(debug_signal[ch_num]);
+        case ch_4: return float(debug_signal[ch_num]);
+        case ch_5: return float(debug_signal[ch_num]);
+        case ch_6: return float(debug_signal[ch_num]);
+        case ch_7: return float(debug_signal[ch_num]);
+        case ch_8: return float(debug_signal[ch_num]);
+        case ch_9: return float(debug_signal[ch_num]);
+        case ch_10: return float(debug_signal[ch_num]);
         default: return 0;
       }
     case DEBUG_SIGNAL_ARRAY:

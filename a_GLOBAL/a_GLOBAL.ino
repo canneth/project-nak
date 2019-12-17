@@ -1,4 +1,7 @@
 
+//#define DEBUG_STANCE
+#define DEBUG_MOVE_TO_BODY_XYZ
+
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 #include <EnableInterrupt.h>
@@ -13,6 +16,11 @@ const boolean RIGHT_LEG = false;
 
 const uint8_t ACTIVE_SIGNAL_ARRAY = 1;
 const uint8_t DEBUG_SIGNAL_ARRAY = 2;
+
+// HEXAPOD GLOBALS //
+
+float default_stance_diameter = 350; // in mm
+float default_stance_height = 100; // in mm
 
 // LEG ID ASSIGNMENT //
 
@@ -36,59 +44,7 @@ const uint8_t servo_R_31 = 0;
 const uint8_t servo_R_32 = 1;
 const uint8_t servo_R_33 = 2;
 
-// LEG PULSE WIDTH OFFSETS //
-
-const int8_t L_11_offset = 0;
-const int8_t L_12_offset = 0;
-const int8_t L_13_offset = 0;
-
-const int8_t L_21_offset = 0;
-const int8_t L_22_offset = 0;
-const int8_t L_23_offset = 0;
-
-const int8_t L_31_offset = 0;
-const int8_t L_32_offset = 0;
-const int8_t L_33_offset = 0;
-
-const int8_t R_11_offset = 0;
-const int8_t R_12_offset = 0;
-const int8_t R_13_offset = 0;
-
-const int8_t R_21_offset = 0;
-const int8_t R_22_offset = 0;
-const int8_t R_23_offset = 0;
-
-const int8_t R_31_offset = 0;
-const int8_t R_32_offset = 0;
-const int8_t R_33_offset = 0;
-
-// PHYSICAL DIMENSIONS //
-
-const float body_width = 200; // coxa pivot to coxa pivot
-
-// COMMAND LIMITS //
-
-// Units in mm... I think?
-
-const long z_height_min = 65;
-const long z_height_max = 150;
-const long y_lean_min = -50;
-const long y_lean_max = 50;
-const long x_lean_min = -50;
-const long x_lean_max = 50;
-const long x_tilt_min = -10;
-const long x_tilt_max = 10;
-const long y_tilt_min = -10;
-const long y_tilt_max = 10;
-const long leg_flare_min = 40;
-const long leg_flare_max = 150;
-
-const long gait_delta_z_max = 50;
-const long gait_delta_z_min = 0;
-
 // FOR RC CONTROL //
-
-#define DEBUG_MOVE_TIBIA_TO_ANGLE
 
 const uint8_t num_of_ch = 10;
 
