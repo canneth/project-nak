@@ -1,6 +1,7 @@
 
 //#define DEBUG_STANCE
 #define DEBUG_MOVE_TO_BODY_XYZ
+//#define DEBUG_MOVE_TO_STANCE_POS
 
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
@@ -19,7 +20,7 @@ const uint8_t DEBUG_SIGNAL_ARRAY = 2;
 
 // HEXAPOD GLOBALS //
 
-float default_stance_diameter = 350; // in mm
+float default_stance_diameter = 320; // in mm
 float default_stance_height = 100; // in mm
 
 // LEG ID ASSIGNMENT //

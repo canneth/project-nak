@@ -231,15 +231,35 @@ class Leg {
     void moveTibiaToSignal(float tibia_signal_cmd) {
       driver.setPWM(tibia_pin, 0, tibia_signal_cmd);
     }
+    void moveToStancePos() {
+      #ifdef DEBUG_MOVE_TO_STANCE_POS
+      Serial.print("leg stance_pos: ");
+      Serial.print(stance_pos[0]);
+      Serial.print(", ");
+      Serial.print(stance_pos[1]);
+      Serial.print(", ");
+      Serial.println(stance_pos[2]);
+      #endif
+      moveToBodyXYZ(stance_pos[0], stance_pos[1], stance_pos[2]);
+    }
     void moveToBodyXYZ(float B_x, float B_y, float B_z) {
       leg_angles_rad vals = bodyIK(B_x, B_y, B_z);
       #ifdef DEBUG_MOVE_TO_BODY_XYZ
       Serial.print("target leg angles: ");
       Serial.print(vals.coxa_rad);
+      Serial.print(" (");
+      Serial.print(degrees(vals.coxa_rad));
+      Serial.print(")");
       Serial.print(", ");
       Serial.print(vals.femur_rad);
+      Serial.print(" (");
+      Serial.print(degrees(vals.femur_rad));
+      Serial.print(")");
       Serial.print(", ");
-      Serial.println(vals.tibia_rad);
+      Serial.print(vals.tibia_rad);
+      Serial.print(" (");
+      Serial.print(degrees(vals.tibia_rad));
+      Serial.println(")");
       #endif
       moveCoxaToAngle(vals.coxa_rad);
       moveFemurToAngle(vals.femur_rad);
@@ -272,12 +292,20 @@ class Leg {
       float B_p_dest_from_L[2];
       B_p_dest_from_L[0] = B_x_dest_from_L;
       B_p_dest_from_L[1] = B_y_dest_from_L;
-
-      float theta = atan2(B_p_dest_from_L[1], B_p_dest_from_L[0]);
+      
+      float theta = 0.0;
+      if (B_p_dest_from_L[0] < 0 && B_p_dest_from_L[1] < 0) {
+        theta = 2.0*PI + atan2(B_p_dest_from_L[1], B_p_dest_from_L[0]);
+      } else {
+        theta = atan2(B_p_dest_from_L[1], B_p_dest_from_L[0]);
+      }
       
       float L_p_dest[3];
-      L_p_dest[0] = B_p_dest_from_L[0]*(cos(theta) - sin(theta));
-      L_p_dest[1] = B_p_dest_from_L[1]*(sin(theta) + cos(theta));
+      // TODO: Figure out the problem with the legs!!
+      // Realised the rotation matrix was not inverted (and fixed it),
+      // but then why did all other legs except R_1 and L_3 work though??
+      L_p_dest[0] = B_p_dest_from_L[0]*(cos(theta) + sin(theta));
+      L_p_dest[1] = B_p_dest_from_L[1]*(-sin(theta) + cos(theta));
       L_p_dest[2] = B_z_dest;
 
       leg_angles_rad solved_leg_angles;
@@ -323,7 +351,7 @@ class Hexapod {
   protected:
   
   private:
-    float stance_diameter = 300;
+    float stance_diameter = 400;
     float stance_height = 80;
 
   public:
@@ -343,8 +371,8 @@ class Hexapod {
       Leg R_1();
       Leg R_2();
       Leg R_3();
-      stance_diameter = 0;
-      stance_height = 0;
+      stance_diameter = 400;
+      stance_height = 80;
     }
     Hexapod(
       Leg L_1_arg,

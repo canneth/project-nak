@@ -57,15 +57,15 @@ void setup() {
 
   // SETTING JOINT ANGLE LIMITS // 
   
-  hexapod.L_1.setCoxaRadMin(radians(180));
-  hexapod.L_1.setCoxaRadMax(radians(90));
+  hexapod.L_1.setCoxaRadMin(radians(90));
+  hexapod.L_1.setCoxaRadMax(radians(180));
   hexapod.L_1.setFemurRadMin(radians(-90));
   hexapod.L_1.setFemurRadMax(radians(0));
   hexapod.L_1.setTibiaRadMin(radians(-90));
   hexapod.L_1.setTibiaRadMax(radians(0));
   
-  hexapod.L_2.setCoxaRadMin(radians(213.5));
-  hexapod.L_2.setCoxaRadMax(radians(146.5));
+  hexapod.L_2.setCoxaRadMin(radians(146.5));
+  hexapod.L_2.setCoxaRadMax(radians(213.5));
   hexapod.L_2.setFemurRadMin(radians(-90));
   hexapod.L_2.setFemurRadMax(radians(0));
   hexapod.L_2.setTibiaRadMin(radians(-90));
