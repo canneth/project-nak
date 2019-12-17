@@ -1,6 +1,5 @@
 
-//#define DEBUG_STANCE
-#define DEBUG_MOVE_TO_BODY_XYZ
+//#define DEBUG_MOVE_TO_BODY_XYZ
 //#define DEBUG_MOVE_TO_STANCE_POS
 
 #include <Wire.h>
