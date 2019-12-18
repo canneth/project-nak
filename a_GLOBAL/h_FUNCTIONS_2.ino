@@ -55,7 +55,7 @@ void copyVolatileSignalsToArray(uint8_t signal_array_id) {
   switch (signal_array_id) {
     case ACTIVE_SIGNAL_ARRAY:
       noInterrupts();
-      memcpy(new_signal, (const void *)volatile_signals, sizeof(volatile_signals)); // Copy data from volatile to new_signal array
+      memcpy(active_signal, (const void *)volatile_signals, sizeof(volatile_signals)); // Copy data from volatile to new_signal array
       interrupts();
     case DEBUG_SIGNAL_ARRAY:
       noInterrupts();
@@ -77,16 +77,16 @@ float getSignalFromArray(uint8_t signal_array_id, uint8_t ch_num) {
   switch (signal_array_id) {
     case ACTIVE_SIGNAL_ARRAY:
       switch (ch_num) {
-        case ch_1: return float(debug_signal[ch_num]);
-        case ch_2: return float(debug_signal[ch_num]);
-        case ch_3: return float(debug_signal[ch_num]);
-        case ch_4: return float(debug_signal[ch_num]);
-        case ch_5: return float(debug_signal[ch_num]);
-        case ch_6: return float(debug_signal[ch_num]);
-        case ch_7: return float(debug_signal[ch_num]);
-        case ch_8: return float(debug_signal[ch_num]);
-        case ch_9: return float(debug_signal[ch_num]);
-        case ch_10: return float(debug_signal[ch_num]);
+        case ch_1: return float(active_signal[ch_num]);
+        case ch_2: return float(active_signal[ch_num]);
+        case ch_3: return float(active_signal[ch_num]);
+        case ch_4: return float(active_signal[ch_num]);
+        case ch_5: return float(active_signal[ch_num]);
+        case ch_6: return float(active_signal[ch_num]);
+        case ch_7: return float(active_signal[ch_num]);
+        case ch_8: return float(active_signal[ch_num]);
+        case ch_9: return float(active_signal[ch_num]);
+        case ch_10: return float(active_signal[ch_num]);
         default: return 0;
       }
     case DEBUG_SIGNAL_ARRAY:

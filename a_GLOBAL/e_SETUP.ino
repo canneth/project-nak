@@ -98,5 +98,5 @@ void setup() {
   hexapod.R_3.setFemurRadMax(radians(0));
   hexapod.R_3.setTibiaRadMin(radians(-90));
   hexapod.R_3.setTibiaRadMax(radians(0));
-  
+
 }

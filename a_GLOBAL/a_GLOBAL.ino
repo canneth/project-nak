@@ -17,6 +17,9 @@ const boolean RIGHT_LEG = false;
 const uint8_t ACTIVE_SIGNAL_ARRAY = 1;
 const uint8_t DEBUG_SIGNAL_ARRAY = 2;
 
+const uint8_t DYNAMIC_STANCE_MODE = 1;
+const uint8_t DYNAMIC_GAIT_MODE = 2;
+
 // HEXAPOD GLOBALS //
 
 float default_stance_diameter = 320; // in mm
@@ -43,6 +46,22 @@ const uint8_t servo_R_23 = 6;
 const uint8_t servo_R_31 = 0;
 const uint8_t servo_R_32 = 1;
 const uint8_t servo_R_33 = 2;
+
+// STRUCTS //
+
+struct foot_pos_t {
+  float x = 0;
+  float y = 0;
+  float z = 0;
+};
+struct foot_phase_diffs_t {
+  float leg_1;
+  float leg_2;
+  float leg_3;
+  float leg_4;
+  float leg_5;
+  float leg_6;
+};
 
 // FOR RC CONTROL //
 
@@ -74,7 +93,7 @@ const uint8_t ch_8_pin = 51;
 const uint8_t ch_9_pin = A14;
 const uint8_t ch_10_pin = A11;
 
-uint16_t new_signal[num_of_ch]; // Values memcpy'd from volatile_signals[] for manipulation.
+uint16_t active_signal[num_of_ch]; // Values memcpy'd from volatile_signals[] for manipulation.
 uint16_t debug_signal[num_of_ch];
 uint32_t rising_edge_time[num_of_ch];
 volatile uint16_t volatile_signals[num_of_ch]; // For ISR access only.

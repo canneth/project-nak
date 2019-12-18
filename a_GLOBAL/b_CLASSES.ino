@@ -30,7 +30,7 @@ class Leg {
     float z_orientation_wrt_body = 0;
     boolean is_left_leg = true;
     
-    float stance_pos[3] = {0, 0, 0};
+    foot_pos_t stance_pos;
     
   public:
     // STRUCTS //
@@ -39,11 +39,6 @@ class Leg {
       float coxa_rad;
       float femur_rad;
       float tibia_rad;
-    };
-    struct foot_pos_t {
-      float x = 0;
-      float y = 0;
-      float z = 0;
     };
 
     // CONSTRUCTORS //
@@ -144,11 +139,9 @@ class Leg {
     void setTibiaSignalMax(uint16_t tibia_signal_max_arg) {
       tibia_signal_max = tibia_signal_max_arg;
     }
-    void setStancePos(float x, float y, float z) {
+    void setStancePos(foot_pos_t new_stance_pos) {
       // stance_pos is the foot location defined with respect to body frame.
-      stance_pos[0] = x;
-      stance_pos[1] = y;
-      stance_pos[2] = z;
+      stance_pos = new_stance_pos;
     }
     
     // GETTER FUNCTIONS //
@@ -202,14 +195,8 @@ class Leg {
     float getTibiaSignalMax() {
       return tibia_signal_max;
     }
-    float getStancePosX() {
-      return stance_pos[0];
-    }
-    float getStancePosY() {
-      return stance_pos[1];
-    }
-    float getStancePosZ() {
-      return stance_pos[2];
+    foot_pos_t getStancePos() {
+      return stance_pos;
     }
       
     // ACTION FUNCTIONS //
@@ -238,16 +225,23 @@ class Leg {
     void moveToStancePos() {
       #ifdef DEBUG_MOVE_TO_STANCE_POS
       Serial.print("leg stance_pos: ");
-      Serial.print(stance_pos[0]);
+      Serial.print(stance_pos.x);
       Serial.print(", ");
-      Serial.print(stance_pos[1]);
+      Serial.print(stance_pos.y);
       Serial.print(", ");
-      Serial.println(stance_pos[2]);
+      Serial.println(stance_pos.z);
       #endif
-      moveToBodyXYZ(stance_pos[0], stance_pos[1], stance_pos[2]);
+      moveToBodyXYZ(stance_pos);
     }
-    void moveToBodyXYZ(float B_x, float B_y, float B_z) {
-      leg_angles_rad_t vals = bodyIK(B_x, B_y, B_z);
+    void moveToBodyXYZ(foot_pos_t foot_pos) {
+      /*
+       * Moves foot to coordinates defined in foot_pos.
+       * 
+       * ARUGMENTS:
+       * + foot_pos: A foot_pos_t struct; the coordinates of the foot_pos to move to, wrt body frame.
+       * 
+       */
+      leg_angles_rad_t vals = bodyIK(foot_pos.x, foot_pos.y, foot_pos.z);
       #ifdef DEBUG_MOVE_TO_BODY_XYZ
       Serial.print("target leg angles: ");
       Serial.print(vals.coxa_rad);
@@ -270,9 +264,9 @@ class Leg {
       moveTibiaToAngle(vals.tibia_rad);
     }
     void updateStancePos(float stance_diameter, float stance_height) {
-      stance_pos[0] = (stance_diameter/2.0)*cos(z_orientation_wrt_body);
-      stance_pos[1] = (stance_diameter/2.0)*sin(z_orientation_wrt_body);
-      stance_pos[2] = -stance_height;
+      stance_pos.x = (stance_diameter/2.0)*cos(z_orientation_wrt_body);
+      stance_pos.y = (stance_diameter/2.0)*sin(z_orientation_wrt_body);
+      stance_pos.z = -stance_height;
     }
     foot_pos_t rollFoot(foot_pos_t foot_pos, float roll_angle) {
       /*
@@ -353,31 +347,80 @@ class Leg {
       // Return new_foot_pos
       return new_foot_pos;
     }
+    foot_pos_t gaitFootSemicircle(
+      foot_pos_t foot_pos,
+      float swing_diameter,
+      float phase,
+      float x_direction_component,
+      float y_direction_component,
+      float phase_diff = 0)
+    {
+      /*
+       * Calculates new foot_pos at each point in the trajectory indicated by phase_counter.
+       * The foot is calculated to be phase_diff out of step.
+       * 
+       * The trajectory of the foot is semi-circular.
+       * 
+       * ARGUMENTS:
+       * + foot_pos: A foot_pos_t struct; the coordinates of the foot_pos to transform.
+       * + swing_diameter: A float; the diameter of the swing phase, also dictates the stride length.
+       * + phase: A float; represents the current phase in the gait.
+       * + x_direction_component: A float; the X direction component used to define orientation of trajectory plane, equivalently the gait direction.
+       * + y_direction_component: A float; the Y direction component used to define orientation of trajectory plane, equivalently the gait direction.
+       * + phase_diff: A float; the phase difference of this leg with respect to the common clock.
+       * 
+       * RETURNS:
+       * + new_foot_pos: A foot_pos_t struct containing the x, y, z coordinates of the new foot_pos.
+       */
+       
+      float gait_direction_vector[2] = {0, 0};
+      
+      // Normalise direction components into gait_direction_vector[]
+      gait_direction_vector[0] = x_direction_component;
+      gait_direction_vector[1] = y_direction_component;
+      
+      float trajectory_x = gait_direction_vector[0]*(swing_diameter/2.0)*sin(phase + phase_diff);
+      float trajectory_y = gait_direction_vector[1]*(swing_diameter/2.0)*sin(phase + phase_diff);
+      float trajectory_z = (swing_diameter/2.0)*cos(phase + phase_diff);
+      
+      foot_pos_t new_foot_pos;
+      new_foot_pos.x = foot_pos.x + trajectory_x;
+      new_foot_pos.y = foot_pos.y + trajectory_y;
+      new_foot_pos.z = (trajectory_z < 0) ? foot_pos.z : foot_pos.z + trajectory_z; // Prevents foot from going below foot_pos.z
+
+      return new_foot_pos;
+    }
     void moveFootByBodyCommand(
       float roll_angle = 0,
       float pitch_angle = 0,
-      float yaw_angle = 0)
+      float yaw_angle = 0,
+      float swing_diameter = 0,
+      float phase = 0,
+      float x_direction_component = 0,
+      float y_direction_component = 0,
+      float phase_diff = 0)
     {
       /*
-       * Calculates foot_pos from stance_pos after all transformations.
+       * Calculates foot_pos from stance_pos after all transformations and moves foot to new_foot_pos.
        * 
        * ARGUMENTS:
        * + roll_angle: The desired roll angle of the body frame.
        * + pitch_angle: The desired pitch angle of the body frame.
+       * 
+       * RETURNS:
+       * + new_foot_pos: A foot_pos_t struct; the new foot_pos after transforms have been applied.
        */
 
       // Calculate final_foot_pos
-      foot_pos_t final_foot_pos;
-      final_foot_pos.x = stance_pos[0];
-      final_foot_pos.y = stance_pos[1];
-      final_foot_pos.z = stance_pos[2];
-      
-      final_foot_pos = rollFoot(final_foot_pos, roll_angle);
-      final_foot_pos = pitchFoot(final_foot_pos, pitch_angle);
-      final_foot_pos = yawFoot(final_foot_pos, yaw_angle);
+      foot_pos_t new_foot_pos;
+      new_foot_pos = stance_pos;
+      new_foot_pos = rollFoot(new_foot_pos, roll_angle);
+      new_foot_pos = pitchFoot(new_foot_pos, pitch_angle);
+      new_foot_pos = yawFoot(new_foot_pos, yaw_angle);
+      new_foot_pos = gaitFootSemicircle(new_foot_pos, swing_diameter, phase, x_direction_component, y_direction_component, phase_diff);
 
-      // Actuate final_foot_pos
-      moveToBodyXYZ(final_foot_pos.x, final_foot_pos.y, final_foot_pos.z);
+      // Move foot to new_foot_pos
+      moveToBodyXYZ(new_foot_pos);
     }
 
     // INVERSE KINEMATIC FUNCTIONS //
@@ -408,9 +451,6 @@ class Leg {
       }
       
       float L_p_dest[3];
-      // TODO: Figure out the problem with the legs!!
-      // Realised the rotation matrix was not inverted (and fixed it),
-      // but then why did all other legs except R_1 and L_3 work though??
       L_p_dest[0] = B_p_dest_from_L[0]*cos(theta) + B_p_dest_from_L[1]*sin(theta);
       L_p_dest[1] = B_p_dest_from_L[0]*(-sin(theta)) + B_p_dest_from_L[1]*cos(theta);
       L_p_dest[2] = B_z_dest;
@@ -543,23 +583,53 @@ class Hexapod {
       R_3.moveToStancePos();
     }
     void dynamicStance(
+      float new_stance_height = 0,
+      float new_stance_diameter = 0,
       float roll_angle = 0,
       float pitch_angle = 0,
-      float yaw_angle = 0,
-      float new_stance_height = 0)
+      float yaw_angle = 0
+      )
     {
-      // new_stance_height is an optional parameter
-      if (new_stance_height != 0) {
-        stance_height = new_stance_height;
-      }
-
+      stance_height = new_stance_height;
+      stance_diameter = new_stance_diameter;
       updateLegsStancePos();
+      
       L_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle);
       L_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle);
       L_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle);
       R_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle);
       R_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle);
       R_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle);
+    }
+    void dynamicGait(
+      float new_stance_height = 0,
+      float new_stance_diameter = 0,
+      float roll_angle = 0,
+      float pitch_angle = 0,
+      float yaw_angle = 0,
+      float swing_diameter = 0,
+      float phase = 0,
+      float x_direction_component = 0,
+      float y_direction_component = 0,
+      foot_phase_diffs_t phase_diffs = {
+        .leg_1 = 0,
+        .leg_2 = 0,
+        .leg_3 = 0,
+        .leg_4 = 0,
+        .leg_5 = 0,
+        .leg_6 = 0
+      }
+      )
+    {
+      stance_height = new_stance_height;
+      stance_diameter = new_stance_diameter;
+      updateLegsStancePos();
+      L_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_1);
+      L_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_2);
+      L_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_3);
+      R_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_4);
+      R_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_5);
+      R_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_6);
       
     }
 };
