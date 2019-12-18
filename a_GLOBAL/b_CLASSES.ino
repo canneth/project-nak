@@ -347,6 +347,25 @@ class Leg {
       // Return new_foot_pos
       return new_foot_pos;
     }
+    foot_pos_t translateFoot(foot_pos_t foot_pos, float body_translate_x, float body_translate_y) {
+      /*
+       * Calculates foot_pos after a translation transform (in the frontal XY-plane).
+       * The transform of the foot_pos is by the negative of the desired translation distance.
+       * 
+       * ARGUMENTS:
+       * + body_translate_x: A float; the distance to translate in the X direction.
+       * + body_translate_y: A float; the distance to translate in the Y direction.
+       * 
+       * RETURNS:
+       * + new_foot_pos: A foot_pos_t struct containing the x, y, z coordinates of the new foot_pos.
+       */
+      foot_pos_t new_foot_pos;
+      new_foot_pos.x = foot_pos.x - body_translate_x;
+      new_foot_pos.y = foot_pos.y - body_translate_y;
+      new_foot_pos.z = foot_pos.z;
+      // Return new_foot_pos
+      return new_foot_pos;
+    }
     foot_pos_t gaitFootSemicircle(
       foot_pos_t foot_pos,
       float swing_diameter,
@@ -394,6 +413,8 @@ class Leg {
       float roll_angle = 0,
       float pitch_angle = 0,
       float yaw_angle = 0,
+      float body_translate_x = 0,
+      float body_translate_y = 0,
       float swing_diameter = 0,
       float phase = 0,
       float x_direction_component = 0,
@@ -417,6 +438,7 @@ class Leg {
       new_foot_pos = rollFoot(new_foot_pos, roll_angle);
       new_foot_pos = pitchFoot(new_foot_pos, pitch_angle);
       new_foot_pos = yawFoot(new_foot_pos, yaw_angle);
+      new_foot_pos = translateFoot(new_foot_pos, body_translate_x, body_translate_y);
       new_foot_pos = gaitFootSemicircle(new_foot_pos, swing_diameter, phase, x_direction_component, y_direction_component, phase_diff);
 
       // Move foot to new_foot_pos
@@ -587,19 +609,21 @@ class Hexapod {
       float new_stance_diameter = 0,
       float roll_angle = 0,
       float pitch_angle = 0,
-      float yaw_angle = 0
+      float yaw_angle = 0,
+      float body_translate_x = 0,
+      float body_translate_y = 0
       )
     {
       stance_height = new_stance_height;
       stance_diameter = new_stance_diameter;
       updateLegsStancePos();
       
-      L_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle);
-      L_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle);
-      L_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle);
-      R_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle);
-      R_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle);
-      R_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle);
+      L_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y);
+      L_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y);
+      L_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y);
+      R_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y);
+      R_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y);
+      R_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y);
     }
     void dynamicGait(
       float new_stance_height = 0,
@@ -607,6 +631,8 @@ class Hexapod {
       float roll_angle = 0,
       float pitch_angle = 0,
       float yaw_angle = 0,
+      float body_translate_x = 0,
+      float body_translate_y = 0,
       float swing_diameter = 0,
       float phase = 0,
       float x_direction_component = 0,
@@ -624,12 +650,12 @@ class Hexapod {
       stance_height = new_stance_height;
       stance_diameter = new_stance_diameter;
       updateLegsStancePos();
-      L_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_1);
-      L_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_2);
-      L_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_3);
-      R_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_4);
-      R_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_5);
-      R_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_6);
+      L_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_1);
+      L_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_2);
+      L_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_3);
+      R_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_4);
+      R_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_5);
+      R_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_6);
       
     }
 };

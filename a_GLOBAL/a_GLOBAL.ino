@@ -20,6 +20,9 @@ const uint8_t DEBUG_SIGNAL_ARRAY = 2;
 const uint8_t DYNAMIC_STANCE_MODE = 1;
 const uint8_t DYNAMIC_GAIT_MODE = 2;
 
+const uint8_t RPY_MODE = 1;
+const uint8_t TRANSLATION_MODE = 2;
+
 // HEXAPOD GLOBALS //
 
 float default_stance_diameter = 320; // in mm

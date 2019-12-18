@@ -7,22 +7,27 @@ void loop() {
     // Get signals
     copyVolatileSignalsToArray(ACTIVE_SIGNAL_ARRAY);
     float mode_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_6);
+    float right_stick_mode_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_7); // TODO: Connect channel 7!
     float roll_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_1);
     float pitch_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_2);
     float yaw_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_9);
+    float translate_x_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_1); // Shares channel with roll_signal
+    float translate_y_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_2); // Shares channel with pitch_signal
     float height_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_5);
     float diameter_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_10);
     float x_direction_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_4);
     float y_direction_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_3);
     
     // Set limits
-    float roll_min = radians(-10);
-    float roll_max = radians(10);
-    float pitch_min = radians(-10);
-    float pitch_max = radians(10);
-    float yaw_min = radians(-10);
-    float yaw_max = radians(10);
-    float height_min = 80.0;
+    float roll_min = radians(-15);
+    float roll_max = radians(15);
+    float pitch_min = radians(-15);
+    float pitch_max = radians(15);
+    float yaw_min = radians(-30);
+    float yaw_max = radians(30);
+    float translate_min = -50.0;
+    float translate_max = 50.0;
+    float height_min = 50.0;
     float height_max = 150.0;
     float diameter_min = 200.0;
     float diameter_max = 500.0;
@@ -31,23 +36,44 @@ void loop() {
     float x_direction_component_max = 1.0;
     float y_direction_component_min = -1.0;
     float y_direction_component_max = 1.0;
+
+    
+    
+    
     
     // Map signals into values
     float roll_angle = constrain(floatMap(roll_signal, signal_min, signal_max, roll_min, roll_max), roll_min, roll_max);
     float pitch_angle = constrain(floatMap(pitch_signal, signal_min, signal_max, pitch_min, pitch_max), pitch_min, pitch_max);
+    float translate_x = constrain(floatMap(translate_x_signal, signal_min, signal_max, translate_min, translate_max), translate_min, translate_max);
+    float translate_y = constrain(floatMap(translate_y_signal, signal_min, signal_max, translate_min, translate_max), translate_min, translate_max);
     float yaw_angle = constrain(floatMap(yaw_signal, signal_min, signal_max, yaw_min, yaw_max), yaw_min, yaw_max);
     float height = constrain(floatMap(height_signal, signal_min, signal_max, height_min, height_max), height_min, height_max);
     float diameter = constrain(floatMap(diameter_signal, signal_min, signal_max, diameter_min, diameter_max), diameter_min, diameter_max);
     float x_direction_component = constrain(floatMap(x_direction_signal, signal_min, signal_max, x_direction_component_min, x_direction_component_max), x_direction_component_min, x_direction_component_max);
     float y_direction_component = constrain(floatMap(y_direction_signal, signal_min, signal_max, y_direction_component_min, y_direction_component_max), y_direction_component_min, y_direction_component_max);
-    x_direction_component = (abs(x_direction_component) > 0.005) ? x_direction_component : 0; // Neutral deadband
-    y_direction_component = (abs(y_direction_component) > 0.005) ? y_direction_component : 0; // Neutral deadband
+    x_direction_component = (abs(x_direction_component) > 0.01) ? x_direction_component : 0; // Neutral deadband
+    y_direction_component = (abs(y_direction_component) > 0.01) ? y_direction_component : 0; // Neutral deadband
+    
+    uint8_t right_stick_mode = (right_stick_mode_signal < signal_mid) ? RPY_MODE : TRANSLATION_MODE;
+    
+    switch (right_stick_mode) {
+      case RPY_MODE:
+      translate_x = 0;
+      translate_y = 0;
+        break;
+      case TRANSLATION_MODE:
+        roll_angle = 0;
+        pitch_angle = 0;
+        break;
+      default:
+        break;
+    }
     
     uint8_t mode = (mode_signal < signal_mid) ? DYNAMIC_STANCE_MODE : DYNAMIC_GAIT_MODE;
-
+    
     switch (mode) {
       case DYNAMIC_STANCE_MODE:
-        hexapod.dynamicStance(height, diameter, roll_angle, pitch_angle, yaw_angle);
+        hexapod.dynamicStance(height, diameter, roll_angle, pitch_angle, yaw_angle, translate_x, translate_y);
         break;
       case DYNAMIC_GAIT_MODE:
         float swing_diameter = 80.0;
@@ -61,7 +87,7 @@ void loop() {
           .leg_5 = 0,
           .leg_6 = PI
         };
-        hexapod.dynamicGait(height, diameter, roll_angle, pitch_angle, yaw_angle, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs);
+        hexapod.dynamicGait(height, diameter, roll_angle, pitch_angle, yaw_angle, translate_x, translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs);
         break;
       default:
         break;
