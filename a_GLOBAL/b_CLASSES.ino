@@ -391,21 +391,49 @@ class Leg {
        * RETURNS:
        * + new_foot_pos: A foot_pos_t struct containing the x, y, z coordinates of the new foot_pos.
        */
-       
+
+
+      float local_phase = 0;
+      local_phase = floatMod(phase, 2.0*PI);
+
+      float swing_stance_modifier = 0;
+
+      float stance_speed_mult = 1 - swing_stance_modifier;
+      float swing_speed_mult = 1 + swing_stance_modifier;
+      
+      if (local_phase >= 0.0) { // 2nd half of swing phase, from origin
+        local_phase = swing_speed_mult*(local_phase);
+        if (local_phase >= PI/2.0) { // Stance phase
+          local_phase = PI/2.0 + stance_speed_mult*(local_phase - PI/2.0);
+          if (local_phase >= 3.0*PI/2.0) { // 1st half of swing phase, toward origin
+            local_phase = 3.0*PI/2.0 + swing_speed_mult*(local_phase - 3.0*PI/2.0);
+          }
+        }
+      }
+      
       float gait_direction_vector[2] = {0, 0};
       
       // Normalise direction components into gait_direction_vector[]
       gait_direction_vector[0] = x_direction_component;
       gait_direction_vector[1] = y_direction_component;
       
-      float trajectory_x = gait_direction_vector[0]*(swing_diameter/2.0)*sin(phase + phase_diff);
-      float trajectory_y = gait_direction_vector[1]*(swing_diameter/2.0)*sin(phase + phase_diff);
-      float trajectory_z = (swing_diameter/2.0)*cos(phase + phase_diff);
+      float trajectory_x = gait_direction_vector[0]*(swing_diameter/2.0)*sin(local_phase + phase_diff);
+      float trajectory_y = gait_direction_vector[1]*(swing_diameter/2.0)*sin(local_phase + phase_diff);
+      float trajectory_z = (swing_diameter/2.0)*cos(local_phase + phase_diff);
       
       foot_pos_t new_foot_pos;
       new_foot_pos.x = foot_pos.x + trajectory_x;
       new_foot_pos.y = foot_pos.y + trajectory_y;
       new_foot_pos.z = (trajectory_z < 0) ? foot_pos.z : foot_pos.z + trajectory_z; // Prevents foot from going below foot_pos.z
+
+      Serial.print("foot_position_x:");
+      Serial.print(new_foot_pos.x);
+      Serial.print(" ");
+      Serial.print("foot_position_y:");
+      Serial.print(new_foot_pos.y);
+      Serial.print(" ");
+      Serial.print("foot_position_z:");
+      Serial.println(new_foot_pos.z);
 
       return new_foot_pos;
     }
@@ -435,11 +463,11 @@ class Leg {
       // Calculate final_foot_pos
       foot_pos_t new_foot_pos;
       new_foot_pos = stance_pos;
+      new_foot_pos = gaitFootSemicircle(new_foot_pos, swing_diameter, phase, x_direction_component, y_direction_component, phase_diff);
       new_foot_pos = rollFoot(new_foot_pos, roll_angle);
       new_foot_pos = pitchFoot(new_foot_pos, pitch_angle);
       new_foot_pos = yawFoot(new_foot_pos, yaw_angle);
       new_foot_pos = translateFoot(new_foot_pos, body_translate_x, body_translate_y);
-      new_foot_pos = gaitFootSemicircle(new_foot_pos, swing_diameter, phase, x_direction_component, y_direction_component, phase_diff);
 
       // Move foot to new_foot_pos
       moveToBodyXYZ(new_foot_pos);
@@ -513,6 +541,13 @@ class Leg {
     
     float float_map(float x, float in_min, float in_max, float out_min, float out_max) {
       return (((x - in_min) * ((out_max - out_min) / (in_max - in_min))) + out_min);
+    }
+
+    float floatMod(float dividend, float divisor) {
+      float quotient = dividend / divisor;
+      uint16_t quotient_trunc = (uint16_t)quotient;
+      float remainder = divisor * (quotient - quotient_trunc);
+      return remainder;
     }
 };
 
@@ -650,12 +685,21 @@ class Hexapod {
       stance_height = new_stance_height;
       stance_diameter = new_stance_diameter;
       updateLegsStancePos();
-      L_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_1);
-      L_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_2);
-      L_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_3);
-      R_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_4);
+//      L_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_1);
+//      L_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_2);
+//      L_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_3);
+//      R_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_4);
       R_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_5);
-      R_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_6);
+//      R_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_6);
       
+    }
+
+    // MISC FUNCTIONS //
+
+    float floatMod(float dividend, float divisor) {
+      float quotient = dividend / divisor;
+      uint16_t quotient_trunc = (uint16_t)quotient;
+      float remainder = divisor * (quotient - quotient_trunc);
+      return remainder;
     }
 };

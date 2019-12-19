@@ -18,7 +18,8 @@ const uint8_t ACTIVE_SIGNAL_ARRAY = 1;
 const uint8_t DEBUG_SIGNAL_ARRAY = 2;
 
 const uint8_t DYNAMIC_STANCE_MODE = 1;
-const uint8_t DYNAMIC_GAIT_MODE = 2;
+const uint8_t TRIPOD_GAIT_MODE = 2;
+const uint8_t RIPPLE_GAIT_MODE = 3;
 
 const uint8_t RPY_MODE = 1;
 const uint8_t TRANSLATION_MODE = 2;
@@ -91,7 +92,7 @@ const uint8_t ch_3_pin = A13; // Lowest: 992, Highest: 1984
 const uint8_t ch_4_pin = A12;
 const uint8_t ch_5_pin = 50;
 const uint8_t ch_6_pin = A15;
-const uint8_t ch_7_pin = 0;
+const uint8_t ch_7_pin = A10;
 const uint8_t ch_8_pin = 51;
 const uint8_t ch_9_pin = A14;
 const uint8_t ch_10_pin = A11;

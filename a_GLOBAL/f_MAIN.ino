@@ -2,19 +2,36 @@
 void loop() {
 
   float phase = 0;
+  float swing_diameter = 100.0;
+  foot_phase_diffs_t tripod_gait {
+          .leg_1 = 0.0,
+          .leg_2 = PI,
+          .leg_3 = 0.0,
+          .leg_4 = PI,
+          .leg_5 = 0.0,
+          .leg_6 = PI
+        };
+  foot_phase_diffs_t ripple_gait {
+    .leg_1 = 0.0,
+    .leg_2 = 4.0*PI/3.0,
+    .leg_3 = 2.0*PI/3.0,
+    .leg_4 = PI,
+    .leg_5 = PI/3.0,
+    .leg_6 = 5.0*PI/3.0
+  };
   
   while (true) {
     // Get signals
     copyVolatileSignalsToArray(ACTIVE_SIGNAL_ARRAY);
-    float mode_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_6);
-    float right_stick_mode_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_7); // TODO: Connect channel 7!
+    float mode_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_10);
+    float right_stick_mode_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_7);
     float roll_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_1);
     float pitch_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_2);
     float yaw_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_9);
     float translate_x_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_1); // Shares channel with roll_signal
     float translate_y_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_2); // Shares channel with pitch_signal
     float height_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_5);
-    float diameter_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_10);
+    float diameter_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_8);
     float x_direction_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_4);
     float y_direction_signal = getSignalFromArray(ACTIVE_SIGNAL_ARRAY, ch_3);
     
@@ -37,12 +54,8 @@ void loop() {
     float y_direction_component_min = -1.0;
     float y_direction_component_max = 1.0;
 
-    
-    
-    
-    
     // Map signals into values
-    float roll_angle = constrain(floatMap(roll_signal, signal_min, signal_max, roll_min, roll_max), roll_min, roll_max);
+    float roll_angle = constrain(floatMap(roll_signal - 40, signal_min, signal_max, roll_min, roll_max), roll_min, roll_max);
     float pitch_angle = constrain(floatMap(pitch_signal, signal_min, signal_max, pitch_min, pitch_max), pitch_min, pitch_max);
     float translate_x = constrain(floatMap(translate_x_signal, signal_min, signal_max, translate_min, translate_max), translate_min, translate_max);
     float translate_y = constrain(floatMap(translate_y_signal, signal_min, signal_max, translate_min, translate_max), translate_min, translate_max);
@@ -68,27 +81,33 @@ void loop() {
       default:
         break;
     }
+
+    uint8_t mode = DYNAMIC_STANCE_MODE;
     
-    uint8_t mode = (mode_signal < signal_mid) ? DYNAMIC_STANCE_MODE : DYNAMIC_GAIT_MODE;
+    if (mode_signal < signal_mid) {
+//      Serial.println("TRIPOD_GAIT_MODE");
+      mode = TRIPOD_GAIT_MODE;
+    } else if (mode_signal > signal_mid - 100 && mode_signal < signal_mid + 100) {
+//      Serial.println("DYNAMIC_STANCE_MODE");
+      mode = DYNAMIC_STANCE_MODE;
+    } else if (mode_signal > signal_mid) {
+//      Serial.println("RIPPLE_GAIT_MODE");
+      mode = RIPPLE_GAIT_MODE;
+    }
     
+//    phase = floatMod(phase + phase_step_scalar*sqrt(pow(x_direction_component, 2) + pow(y_direction_component, 2)), 2.0*PI);
+    phase = floatMod(phase + phase_step_scalar, 2.0*PI); // Fake throttle
+    x_direction_component = 0.0;
+    y_direction_component = 0.5;
     switch (mode) {
       case DYNAMIC_STANCE_MODE:
         hexapod.dynamicStance(height, diameter, roll_angle, pitch_angle, yaw_angle, translate_x, translate_y);
         break;
-      case DYNAMIC_GAIT_MODE:
-        float swing_diameter = 80.0;
-        phase = phase + phase_step_scalar*sqrt(pow(x_direction_component, 2) + pow(y_direction_component, 2));
-        
-        foot_phase_diffs_t phase_diffs {
-          .leg_1 = 0,
-          .leg_2 = PI,
-          .leg_3 = 0,
-          .leg_4 = PI,
-          .leg_5 = 0,
-          .leg_6 = PI
-        };
-        hexapod.dynamicGait(height, diameter, roll_angle, pitch_angle, yaw_angle, translate_x, translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs);
+      case TRIPOD_GAIT_MODE:
+        hexapod.dynamicGait(height, diameter, roll_angle, pitch_angle, yaw_angle, translate_x, translate_y, swing_diameter, phase, x_direction_component, y_direction_component, tripod_gait);
         break;
+      case RIPPLE_GAIT_MODE:
+        hexapod.dynamicGait(height, diameter, roll_angle, pitch_angle, yaw_angle, translate_x, translate_y, swing_diameter, phase, x_direction_component, y_direction_component, ripple_gait);
       default:
         break;
     }
