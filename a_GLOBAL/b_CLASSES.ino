@@ -372,7 +372,8 @@ class Leg {
       float phase,
       float x_direction_component,
       float y_direction_component,
-      float phase_diff = 0)
+      float phase_diff = 0,
+      float swing_speed = 0)
     {
       /*
        * Calculates new foot_pos at each point in the trajectory indicated by phase_counter.
@@ -394,9 +395,9 @@ class Leg {
 
 
       float local_phase = 0;
-      local_phase = floatMod(phase, 2.0*PI);
+      local_phase = floatMod(phase + phase_diff, 2.0*PI);
 
-      float swing_stance_modifier = 0;
+      float swing_stance_modifier = swing_speed;
 
       float stance_speed_mult = 1 - swing_stance_modifier;
       float swing_speed_mult = 1 + swing_stance_modifier;
@@ -417,9 +418,9 @@ class Leg {
       gait_direction_vector[0] = x_direction_component;
       gait_direction_vector[1] = y_direction_component;
       
-      float trajectory_x = gait_direction_vector[0]*(swing_diameter/2.0)*sin(local_phase + phase_diff);
-      float trajectory_y = gait_direction_vector[1]*(swing_diameter/2.0)*sin(local_phase + phase_diff);
-      float trajectory_z = (swing_diameter/2.0)*cos(local_phase + phase_diff);
+      float trajectory_x = gait_direction_vector[0]*(swing_diameter/2.0)*sin(local_phase);
+      float trajectory_y = gait_direction_vector[1]*(swing_diameter/2.0)*sin(local_phase);
+      float trajectory_z = (swing_diameter/2.0)*cos(local_phase);
       
       foot_pos_t new_foot_pos;
       new_foot_pos.x = foot_pos.x + trajectory_x;
@@ -447,7 +448,8 @@ class Leg {
       float phase = 0,
       float x_direction_component = 0,
       float y_direction_component = 0,
-      float phase_diff = 0)
+      float phase_diff = 0,
+      float swing_speed = 0)
     {
       /*
        * Calculates foot_pos from stance_pos after all transformations and moves foot to new_foot_pos.
@@ -463,7 +465,7 @@ class Leg {
       // Calculate final_foot_pos
       foot_pos_t new_foot_pos;
       new_foot_pos = stance_pos;
-      new_foot_pos = gaitFootSemicircle(new_foot_pos, swing_diameter, phase, x_direction_component, y_direction_component, phase_diff);
+      new_foot_pos = gaitFootSemicircle(new_foot_pos, swing_diameter, phase, x_direction_component, y_direction_component, phase_diff, swing_speed);
       new_foot_pos = rollFoot(new_foot_pos, roll_angle);
       new_foot_pos = pitchFoot(new_foot_pos, pitch_angle);
       new_foot_pos = yawFoot(new_foot_pos, yaw_angle);
@@ -679,18 +681,19 @@ class Hexapod {
         .leg_4 = 0,
         .leg_5 = 0,
         .leg_6 = 0
-      }
+      },
+      float swing_speed = 0
       )
     {
       stance_height = new_stance_height;
       stance_diameter = new_stance_diameter;
       updateLegsStancePos();
-//      L_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_1);
-//      L_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_2);
-//      L_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_3);
-//      R_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_4);
-      R_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_5);
-//      R_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_6);
+      L_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_1, swing_speed);
+      L_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_2, swing_speed);
+      L_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_3, swing_speed);
+      R_1.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_4, swing_speed);
+      R_2.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_5, swing_speed);
+      R_3.moveFootByBodyCommand(roll_angle, pitch_angle, yaw_angle, body_translate_x, body_translate_y, swing_diameter, phase, x_direction_component, y_direction_component, phase_diffs.leg_6, swing_speed);
       
     }
 
